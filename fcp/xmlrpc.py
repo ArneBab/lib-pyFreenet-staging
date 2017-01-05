@@ -24,7 +24,7 @@ class FCPXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
     def __init__(self, **kw):
         """
         Creates the xml-rpc server
-    
+
         Keywords:
             - host - hostname to listen on for xml-rpc requests, default 127.0.0.1
             - port - port  to listen on for xml-rpc requests, default 19481
@@ -36,26 +36,26 @@ class FCPXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
         # create the server
         host = kw.get('host', xmlrpcHost)
         port = kw.get('port', xmlrpcPort)
-    
+
         SimpleXMLRPCServer.__init__(self, (host, port))
-    
+
         # create the fcp node interface
         fcpHost = kw.get('fcpHost', node.defaultFCPHost)
         fcpPort = kw.get('fcpPort', node.defaultFCPPort)
         verbosity = kw.get('verbosity', node.SILENT)
-    
+
         self.node = node.FCPNode(host=fcpHost,
                                  port=fcpPort,
                                  verbosity=verbosity,
                                  )
-    
+
         # create the request handler
         hdlr = FreenetXMLRPCRequestHandler(self.node)
-    
+
         # link in the request handler object
         self.register_instance(hdlr)
         self.register_introspection_functions()
-    
+
     def run(self):
         """
         Launch the server to run forever
@@ -65,7 +65,7 @@ class FCPXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
         except KeyboardInterrupt:
             self.node.shutdown()
             raise
-    
+
 
 class FreenetXMLRPCRequestHandler:
     """
@@ -73,14 +73,14 @@ class FreenetXMLRPCRequestHandler:
     for freenet xmlrpc server
     """
     def __init__(self, fcpnode):
-    
+
         self.node = fcpnode
-    
-    
+
+
     def get(self, uri, options=None):
         """
         Performs a fetch of a key
-    
+
         Arguments:
             - uri - the URI to retrieve
             - options - a mapping (dict) object containing various
@@ -88,18 +88,18 @@ class FreenetXMLRPCRequestHandler:
         """
         if options is None:
             options = {}
-        
+
         if options.has_key('file'):
             raise Exception("file option not available over XML-RPC")
         if options.has_key('dir'):
             raise Exception("dir option not available over XML-RPC")
-    
+
         return self.node.get(uri, **options)
-    
+
     def put(self, uri, options=None):
         """
         Inserts data to node
-    
+
         Arguments:
             - uri - the URI to insert under
             - options - a mapping (dict) object containing various options,
@@ -107,18 +107,18 @@ class FreenetXMLRPCRequestHandler:
         """
         if options is None:
             options = {}
-    
+
         if options.has_key('file'):
             raise Exception("file option not available over XML-RPC")
         if options.has_key('dir'):
             raise Exception("dir option not available over XML-RPC")
-    
+
         return self.node.put(uri, data=data, **options)
-    
+
     def genkey(self):
-        
+
         return self.node.genkey()
-    
+
 
 def usage(msg="", ret=1):
 
@@ -155,13 +155,13 @@ def usage(msg="", ret=1):
     sys.exit(ret)
 
 def testServer():
-    
+
     runServer(host="", fcpHost="127.0.0.1", verbosity=DETAIL)
 
 def runServer(**kw):
     """
     Creates and runs a basic XML-RPC server for FCP access
-    
+
     For keyword parameters, refer FCPXMLRPCServer constructor
     """
     FCPXMLRPCServer(**kw).run()
@@ -228,6 +228,6 @@ def main():
 
 
 if __name__ == '__main__':
-    
+
     main()
 

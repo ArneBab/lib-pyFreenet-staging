@@ -218,7 +218,7 @@ def main():
         # if no infile is given, automatically upload to a CHK key.
         infile = args[0]
         uri = "freenet:CHK@/" + node.toUrlsafe(infile)
-        
+
     # if we got an infile, but the key does not have the filename, use that filename for the uri.
     if infile and uri[-2:] == "@/" and uri[:3] in keytypes:
         uri += node.toUrlsafe(infile)
@@ -250,7 +250,7 @@ def main():
 
     #: The key of the uploaded file.
     freenet_uri = None
-    
+
     if makeDDARequest:
         if infile is not None:
             ddareq = {}

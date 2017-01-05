@@ -24,7 +24,7 @@ class NamesMgr:
     synonyms = {"addservice" : "newservice",
                 "listservice" : "listservices",
                 }
-        
+
     #@-node:synonyms
     #@+node:__init__
     def __init__(self, node):
@@ -32,7 +32,7 @@ class NamesMgr:
         Create a command interface for names service
         """
         self.node = node
-    
+
     #@-node:__init__
     #@+node:execute
     def execute(self, cmd, *args):
@@ -40,20 +40,20 @@ class NamesMgr:
         executes command with args
         """
         cmd = self.synonyms.get(cmd, cmd)
-    
+
         method = getattr(self, "cmd_"+cmd, None)
         if not method:
             usage("unrecognised command '%s'" % cmd)
         return method(*args)
-    
-    
+
+
     #@-node:execute
     #@+node:cmd_help
     def cmd_help(self, *args):
-        
+
         help()
         sys.exit(0)
-    
+
     #@-node:cmd_help
     #@+node:cmd_newservice
     def cmd_newservice(self, *args):
@@ -61,45 +61,45 @@ class NamesMgr:
         Creates a new local name service
         """
         #print "cmd_newservice %s" % repr(args)
-    
+
         nargs = len(args)
-    
+
         if nargs not in [1, 2]:
             usage("newservice: bad argument count")
-        
+
         name = args[0]
         if len(args) == 2:
             priv = args[1]
             pub = self.node.invertkey(priv)
         else:
             pub, priv = self.node.genkey()
-    
+
         pub = self.node.namesiteProcessUri(pub)
         priv = self.node.namesiteProcessUri(priv)
-    
+
         self.node.namesiteAddLocal(name, priv)
-    
+
         print pub
-    
+
     #@-node:cmd_newservice
     #@+node:cmd_delservice
     def cmd_delservice(self, *args):
         """
         delservice <name>
-        
+
         Remove local service <name> and deletes its records
         """
         #print "cmd_delservice %s" % repr(args)
-    
+
         nargs = len(args)
-    
+
         if nargs != 1:
             usage("delservice: bad argument count")
-        
+
         name = args[0]
-    
+
         self.node.namesiteDelLocal(name)
-    
+
     #@-node:cmd_delservice
     #@+node:cmd_listservices
     def cmd_listservices(self):
@@ -108,7 +108,7 @@ class NamesMgr:
         """
         for rec in self.node.namesiteLocals:
             print "%s %s" % (rec['name'], rec['puburi'])
-    
+
     #@-node:cmd_listservices
     #@+node:cmd_dumpservice
     def cmd_dumpservice(self, *args):
@@ -116,55 +116,55 @@ class NamesMgr:
         Dumps out all records for given service
         """
         nargs = len(args)
-        
+
         if nargs != 1:
             usage("dumpservice: bad argument count")
-        
+
         name = args[0]
-        
+
         for rec in self.node.namesiteLocals:
             if rec['name'] == name:
                 for k,v in rec['cache'].items():
                     print "%s %s" % (k, v)
-    
+
     #@-node:cmd_dumpservice
     #@+node:cmd_addpeer
     def cmd_addpeer(self, *args):
         """
         addpeer <name> <uri>
-    
+
         Adds a peer name service
         """
         #print "cmd_addpeer %s" % repr(args)
-    
+
         nargs = len(args)
-        
+
         if nargs != 2:
             usage("addpeer: bad argument count")
-        
+
         name, uri = args
-        
+
         self.node.namesiteAddPeer(name, uri)
-    
+
     #@-node:cmd_addpeer
     #@+node:cmd_delpeer
     def cmd_delpeer(self, *args):
         """
         delpeer <name>
-    
+
         Remove peer name service <name>
         """
         #print "cmd_delpeer %s" % repr(args)
-    
+
         nargs = len(args)
-        
+
         if nargs != 1:
             usage("delpeer: bad argument count")
-        
+
         name = args[0]
-        
+
         self.node.namesiteRemovePeer(name)
-    
+
     #@-node:cmd_delpeer
     #@+node:cmd_listpeers
     def cmd_listpeers(self):
@@ -173,43 +173,43 @@ class NamesMgr:
         """
         for rec in self.node.namesitePeers:
             print "%s %s" % (rec['name'], rec['puburi'])
-    
+
     #@-node:cmd_listpeers
     #@+node:cmd_addrecord
     def cmd_addrecord(self, *args):
         """
         addrecord <service> <sitename> <uri>
-    
+
         Add to local service <service> a record mapping <sitename> to <uri>
         """
         #print "cmd_addrecord %s" % repr(args)
-    
+
         nargs = len(args)
         if nargs != 3:
             usage("addrecord: bad argument count")
-        
+
         localname, domain, uri = args
-    
+
         self.node.namesiteAddRecord(localname, domain, uri)
-    
+
     #@-node:cmd_addrecord
     #@+node:cmd_delrecord
     def cmd_delrecord(self, *args):
         """
         delrecord <service> <sitename>
-    
+
         Remove from local service <service> the record for name <sitename>
         """
         #print "cmd_delrecord %s" % repr(args)
-    
+
         nargs = len(args)
         if nargs != 2:
             usage("delrecord: bad argument count")
-        
+
         service, sitename = args
-    
+
         self.node.namesiteDelRecord(service, sitename)
-    
+
     #@-node:cmd_delrecord
     #@+node:cmd_reinsertservice
     def cmd_reinsertservice(self, *args):
@@ -217,25 +217,25 @@ class NamesMgr:
         Forces a reinsert of all records for given service
         """
         nargs = len(args)
-        
+
         if nargs != 1:
             usage("dumpservice: bad argument count")
-        
+
         name = args[0]
-        
+
         for r in self.node.namesiteLocals:
             if r['name'] == name:
                 rec = r
                 break
         if not rec:
             return
-        
+
         for domain,uri in rec['cache'].items():
             # reinsert each record
-    
+
             # determine the insert uri
             localPrivUri = rec['privuri'] + "/" + domain + "/0"
-    
+
             # and stick it in, via global queue
             id = "namesite|%s|%s|%s" % (name, domain, int(time.time()))
             self.node.put(
@@ -247,9 +247,9 @@ class NamesMgr:
                 priority=0,
                 async=True,
                 )
-    
+
         self.node.refreshPersistentRequests()
-    
+
     #@-node:cmd_reinsertservice
     #@+node:cmd_verifyservice
     def cmd_verifyservice(self, *args):
@@ -257,36 +257,36 @@ class NamesMgr:
         Tries to retrieve all the records of a given service
         """
         nargs = len(args)
-        
+
         if nargs != 1:
             usage("dumpservice: bad argument count")
-        
+
         name = args[0]
-    
-        rec = None    
+
+        rec = None
         for r in self.node.namesiteLocals:
             if r['name'] == name:
                 rec = r
                 break
         if not rec:
             usage("No local service called '%s'" % name)
-    
+
         ntotal = 0
         nsuccessful = 0
         nfailed = 0
         nincorrect = 0
-    
+
         for domain,uri in rec['cache'].items():
-    
+
             ntotal += 1
-    
+
             # retrieve each record
-    
+
             # determine the insert uri
             localPubUri = rec['puburi'] + "/" + domain + "/0"
-            
+
             print ("Trying to retrieve record %s..." % domain),
-    
+
             try:
                 mimetype, data = recUri = self.node.get(localPubUri, priority=0)
                 if data == uri:
@@ -298,31 +298,31 @@ class NamesMgr:
             except:
                 print "  failed to fetch"
                 nfailed += 1
-    
+
         print "Result: total=%s successful=%s failed=%s" % (
             ntotal, nsuccessful, nfailed+nincorrect)
-    
+
     #@-node:cmd_verifyservice
     #@+node:cmd_lookup
     def cmd_lookup(self, *args):
         """
         lookup <name>
-    
+
         look up <name>, and print its target uri
         """
         #print "cmd_lookup %s" % repr(args)
-    
+
         if len(args) != 1:
             usage("Syntax: lookup <domainname>")
-    
+
         domain = args[0]
-        
+
         uri = self.node.namesiteLookup(domain)
         if uri:
             print uri
         else:
             return 1
-    
+
     #@-node:cmd_lookup
     #@-others
 
@@ -448,7 +448,7 @@ def main():
 
         if o in ("-H", "--fcpHost"):
             fcpHost = a
-        
+
         if o in ("-P", "--fcpPort"):
             try:
                 fcpPort = int(a)

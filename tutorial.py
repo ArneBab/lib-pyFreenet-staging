@@ -6,7 +6,7 @@ import sys, os, tempfile, random, uuid
 # This is a tutorial introduction to
 # pyFreenet, arranged as comments and code
 # interspersed in a python script
-# 
+#
 # read through this carefully, and learn
 # ------------------------------------------
 
@@ -24,7 +24,7 @@ fcpHost = "127.0.0.1"
 
 # ------------------------------------------
 # create a node connection object
-# 
+#
 # we're setting a relatively high verbosity so you
 # can see the traffic
 

@@ -30,7 +30,7 @@ To get good API documentation, run:
 
     $ epydoc -n "pyFreenet API manual" -o html fcp
 
-When you install this package (refer INSTALL), you should 
+When you install this package (refer INSTALL), you should
 end up with a command 'freesitemgr' on your PATH.
 
 'freesitemgr' is a console-based freesite insertion utility
