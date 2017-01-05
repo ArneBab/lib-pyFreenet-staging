@@ -31,18 +31,18 @@ class Handler(SimpleHTTPRequestHandler):
     #@    @+others
     #@+node:__init__
     def __init__(self, request, client_address, server):
-        
+
         self.server = server
         SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
-    
+
     #@-node:__init__
     #@+node:do_GET
     def do_GET(self):
-        
+
         print "GET: client=%s path=%s" % (self.client_address, self.path)
-    
+
         #SimpleHTTPRequestHandler.do_GET(self)
-    
+
         try:
             #mimetype, data = self.server.node.get(self.path[1:])
             #self.send_response(200)
@@ -51,14 +51,14 @@ class Handler(SimpleHTTPRequestHandler):
             #self.end_headers()
             #self.wfile.write(data)
             #self.wfile.flush()
-    
+
             self.fproxyGet(self.path)
-    
+
         except:
             traceback.print_exc()
             self.send_error(404, "File not found")
             return None
-    
+
     #@-node:do_GET
     #@+node:fproxyGet
     def fproxyGet(self, path):
@@ -67,10 +67,10 @@ class Handler(SimpleHTTPRequestHandler):
         """
         server = self.server
         headers = self.headers
-    
+
         print "--------------------------------------------"
         print "** path=%s" % path
-    
+
         # first scenario - user is pointing their browser directly at
         # fproxyfproxy, barf!
         if not path.startswith("http://"):
@@ -92,25 +92,25 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
             self.wfile.flush()
             return
-    
+
         # convert path to relative
         path = "/" + path[7:].split("/", 1)[-1]
         #print "** path=%s" % repr(path)
-    
-    
+
+
         try:
             # check host header
             hostname = headers.get("Host", 'fproxy')
             pathbits = path.split("/")
-    
+
             print "** hostname = %s" % hostname
-    
+
             # second scenario, user has just given a domain name without trailing /
             if len(pathbits) == 1:
                 # redirect to force trailing slash
                 location = path + "/"
                 print "** redirecting to: %s" % location
-    
+
                 self.send_response(301)
                 self.send_header("Content-type", "text/html")
                 data = "\n".join([
@@ -128,12 +128,12 @@ class Handler(SimpleHTTPRequestHandler):
                 self.wfile.write(data)
                 self.wfile.flush()
                 return
-    
+
             tail = "/".join(pathbits[1:])
-    
+
             # third scenario - request into fproxy
             if hostname == 'fproxy':
-    
+
                 # tis an fproxy request, go straight through
                 conn = HTTPConnection(server.fproxyHost, server.fproxyPort)
                 conn.request("GET", path)
@@ -148,11 +148,11 @@ class Handler(SimpleHTTPRequestHandler):
                 self.wfile.flush()
                 conn.close()
                 return
-    
+
             else:
                 # final scenario - some other domain, try lookup
                 uri = server.node.namesiteLookup(hostname)
-    
+
                 if not uri:
                     # lookup failed, do the usual 404 thang
                     print "** lookup of domain %s failed" % hostname
@@ -175,7 +175,7 @@ class Handler(SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(data)
                     self.wfile.flush()
-    
+
                 # lookup succeeded - ok to go now via fproxy
                 conn = HTTPConnection(server.fproxyHost, server.fproxyPort)
                 newpath = "/" + uri
@@ -190,7 +190,7 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_response(resp.status)
                 self.send_header("Content-type",
                                  resp.getheader("Content-Type", "text/plain"))
-    
+
                 # has fproxy sent us a redirect?
                 if resp.status == 301:
                     # yuck, fproxy is telling us to redirect, which
@@ -202,7 +202,7 @@ class Handler(SimpleHTTPRequestHandler):
                     print "*** old location = %s" % location
                     print "***  --> %s" % newLocation
                     self.send_header("Location", newLocation)
-    
+
                 # get the data from fproxy and send it up to the client
                 data = resp.read()
                 self.send_header("Content-Length", str(len(data)))
@@ -211,12 +211,12 @@ class Handler(SimpleHTTPRequestHandler):
                 self.wfile.flush()
                 conn.close()
                 return
-    
+
             return
-    
+
         except socket.error:
             raise
-    
+
     #@-node:fproxyGet
     #@-others
 
@@ -231,7 +231,7 @@ class FProxyProxy(ThreadingMixIn, HTTPServer):
     def __init__(self, **kw):
         """
         runs the FProxyProxy service
-        
+
         Keywords:
             - node - a live FCPNode object
             - fproxyHost - hostname of fproxy
@@ -241,11 +241,11 @@ class FProxyProxy(ThreadingMixIn, HTTPServer):
         """
         for k in ['node', 'fproxyHost', 'fproxyPort', 'listenHost', 'listenPort']:
             setattr(self, k, kw[k])
-    
+
         self.log = self.node._log
-    
+
         HTTPServer.__init__(self, (self.listenHost, self.listenPort), Handler)
-    
+
     #@-node:__init__
     #@+node:run
     def run(self):
@@ -256,9 +256,9 @@ class FProxyProxy(ThreadingMixIn, HTTPServer):
         log(ERROR, "FproxyProxy listening on %s:%s" % (self.listenHost, self.listenPort))
         log(ERROR, "  -> forwarding requests to fproxy at %s:%s" % (
                     self.fproxyHost, self.fproxyPort))
-    
+
         self.serve_forever()
-    
+
     #@-node:run
     #@-others
 
@@ -364,7 +364,7 @@ def main():
 
         if o in ("-H", "--fcpHost"):
             fcpHost = a
-        
+
         if o in ("-P", "--fcpPort"):
             try:
                 fcpPort = int(a)
@@ -392,7 +392,7 @@ def main():
                     fproxyHost = parts[0]
                 if parts[1]:
                     fproxyPort = int(parts[1])
-            
+
     # try to create an FCP node, needed for name lookups
     try:
         n = node.FCPNode(host=fcpHost, port=fcpPort, verbosity=verbosity,

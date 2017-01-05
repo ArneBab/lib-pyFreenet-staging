@@ -11,8 +11,8 @@ from distutils.core import setup
 
 doze = sys.platform.lower().startswith("win")
 
-scripts = ["freesitemgr", "pyNodeConfig", 
-           "fcpget", "fcpput", "fcpupload", "fcpgenkey", "fcpinvertkey", "fcpredirect", "fcpnames", 
+scripts = ["freesitemgr", "pyNodeConfig",
+           "fcpget", "fcpput", "fcpupload", "fcpgenkey", "fcpinvertkey", "fcpredirect", "fcpnames",
            "fproxyproxy", "copyweb"  # , "freedisk"  # <- not yet reviewed
            ]
 if doze:

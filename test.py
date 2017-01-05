@@ -3,7 +3,7 @@
 
 """
 
-Tests: 
+Tests:
 
 put/get ksk ssk usk dir freesite → data file async
 
@@ -58,7 +58,7 @@ def submitCmd(*args, **kwds):
     ... """
     >>> submitCmd(connid, "GetNode", rawcmd=raw)["Identifier"] == connid
     True
-    
+
     '''
     return node._submitCmd(*args, **kwds)
 
@@ -70,13 +70,13 @@ def fcpPluginMessage(*args, **kwds):
     # >>> fcpPluginMessage(id="pyfreenet",
     # ...     plugin_name="plugins.HelloFCP.HelloFCP")
     # [{'header': 'FCPPluginReply', 'PluginName': 'plugins.HelloFCP.HelloFCP', 'Identifier': 'pyfreenet'}]
-    
+
     '''
     return node.fcpPluginMessage(*args, **kwds)
 
 def put(*args, **kwds):
     '''
-    
+
     - uri=ksk ssk usk × data file dir redirect
     - dontcompress, chkonly, mimetype, waituntilsent, async
     - persistence, Verbosity, priority, realtime, Global
@@ -93,7 +93,7 @@ def put(*args, **kwds):
     >>> kskput = put(uri="KSK@"+myid, data=data, **kwds)
     >>> redirput = put(uri="KSK@redirectto"+myid, redirect="KSK@"+myid, **kwds)
     >>> dirput = put(dir=workdir, **kwds)
-    >>> # the following wait until freenet is really finished 
+    >>> # the following wait until freenet is really finished
     >>> # so they are horribly slow. Activate them manually.
     >>> # chkput.wait()
     >>> True # uskput.wait() == publicusk
@@ -103,64 +103,64 @@ def put(*args, **kwds):
     >>> # kskput.wait()
     >>> # redirput.wait()
     >>> # dirput.wait()
-    
+
     '''
     return node.put(*args, **kwds)
 
 def get(uri, *args, **kwds):
     '''
-    
+
     >>> # warning: this can be slow the first time you run it.
     >>> mime, data = get("KSK@gpl.txt", realtime=True, priority=0)[:2]
     >>> data[:9]
     '\\t\\t    GNU'
     >>> # rest tested in put
-    
+
     '''
     return node.get(uri, *args, **kwds)
 
 f
 def putdir(*args, **kwds):
     '''
-    
+
     putdir is a specialization of dir. It’s tested with put.
 
     - name, usk (for dir-mode)
-    
-    >>> # putdir() 
-    
+
+    >>> # putdir()
+
     '''
     return node.putdir(*args, **kwds)
 
 def modifyconfig(*args, **kwds):
     '''
 
-    >>> # modifyconfig() 
-    
+    >>> # modifyconfig()
+
     '''
     return node.modifyconfig(*args, **kwds)
 
 def getconfig(*args, **kwds):
     '''
 
-    >>> # getconfig() 
-    
+    >>> # getconfig()
+
     '''
     return node.getconfig(*args, **kwds)
 
 def invertprivate(*args, **kwds):
     '''
 
-    >>> # invertprivate() 
-    
+    >>> # invertprivate()
+
     '''
     return node.invertprivate(*args, **kwds)
 
 def redirect(*args, **kwds):
     '''
 
-    >>> # redirect() 
-    
+    >>> # redirect()
+
     '''
     return node.redirect(*args, **kwds)
 
@@ -191,176 +191,176 @@ def genchk(*args, **kwds):
 def listpeers(*args, **kwds):
     '''
 
-    >>> # listpeers() 
-    
+    >>> # listpeers()
+
     '''
     return node.listpeers(*args, **kwds)
 
 def listpeernotes(*args, **kwds):
     '''
 
-    >>> # listpeernotes() 
-    
+    >>> # listpeernotes()
+
     '''
     return node.listpeernotes(*args, **kwds)
 
 def refstats(*args, **kwds):
     '''
 
-    >>> # refstats() 
-    
+    >>> # refstats()
+
     '''
     return node.refstats(*args, **kwds)
 
 def testDDA(*args, **kwds):
     '''
 
-    >>> # testDDA() 
-    
+    >>> # testDDA()
+
     '''
     return node.testDDA(*args, **kwds)
 
 def addpeer(*args, **kwds):
     '''
 
-    >>> # addpeer() 
-    
+    >>> # addpeer()
+
     '''
     return node.addpeer(*args, **kwds)
 
 def listpeer(*args, **kwds):
     '''
 
-    >>> # listpeer() 
-    
+    >>> # listpeer()
+
     '''
     return node.listpeer(*args, **kwds)
 
 def modifypeer(*args, **kwds):
     '''
 
-    >>> # modifypeer() 
-    
+    >>> # modifypeer()
+
     '''
     return node.modifypeer(*args, **kwds)
 
 def modifypeernote(*args, **kwds):
     '''
 
-    >>> # modifypeernote() 
-    
+    >>> # modifypeernote()
+
     '''
     return node.modifypeernote(*args, **kwds)
 
 def removepeer(*args, **kwds):
     '''
 
-    >>> # removepeer() 
-    
+    >>> # removepeer()
+
     '''
     return node.removepeer(*args, **kwds)
 
 def namesiteAddLocal(*args, **kwds):
     '''
 
-    >>> # namesiteAddLocal() 
-    
+    >>> # namesiteAddLocal()
+
     '''
     return node.namesiteAddLocal(*args, **kwds)
 
 def namesiteAddRecord(*args, **kwds):
     '''
 
-    >>> # namesiteAddRecord() 
-    
+    >>> # namesiteAddRecord()
+
     '''
     return node.namesiteAddRecord(*args, **kwds)
 
 def namesiteLookup(*args, **kwds):
     '''
 
-    >>> # namesiteLookup() 
-    
+    >>> # namesiteLookup()
+
     '''
     return node.namesiteLookup(*args, **kwds)
 
 def listenGlobal(*args, **kwds):
     '''
 
-    >>> # listenGlobal() 
-    
+    >>> # listenGlobal()
+
     '''
     return node.listenGlobal(*args, **kwds)
 
 def ignoreGlobal(*args, **kwds):
     '''
 
-    >>> # ignoreGlobal() 
-    
+    >>> # ignoreGlobal()
+
     '''
     return node.ignoreGlobal(*args, **kwds)
 
 def purgePersistentJobs(*args, **kwds):
     '''
 
-    >>> # purgePersistentJobs() 
-    
+    >>> # purgePersistentJobs()
+
     '''
     return node.purgePersistentJobs(*args, **kwds)
 
 def getAllJobs(*args, **kwds):
     '''
 
-    >>> # getAllJobs() 
-    
+    >>> # getAllJobs()
+
     '''
     return node.getAllJobs(*args, **kwds)
 
 def getPersistentJobs(*args, **kwds):
     '''
 
-    >>> # getPersistentJobs() 
-    
+    >>> # getPersistentJobs()
+
     '''
     return node.getPersistentJobs(*args, **kwds)
 
 def getGlobalJobs(*args, **kwds):
     '''
 
-    >>> # getGlobalJobs() 
-    
+    >>> # getGlobalJobs()
+
     '''
     return node.getGlobalJobs(*args, **kwds)
 
 def getTransientJobs(*args, **kwds):
     '''
 
-    >>> # getTransientJobs() 
-    
+    >>> # getTransientJobs()
+
     '''
     return node.getTransientJobs(*args, **kwds)
 
 def refreshPersistentRequests(*args, **kwds):
     '''
 
-    >>> # refreshPersistentRequests() 
-    
+    >>> # refreshPersistentRequests()
+
     '''
     return node.refreshPersistentRequests(*args, **kwds)
 
 def clearGlobalJob(*args, **kwds):
     '''
 
-    >>> # clearGlobalJob() 
-    
+    >>> # clearGlobalJob()
+
     '''
     return node.clearGlobalJob(*args, **kwds)
 
 def shutdown(*args, **kwds):
     '''
 
-    >>> # shutdown() 
-    
+    >>> # shutdown()
+
     '''
     return node.shutdown(*args, **kwds)
 
@@ -373,7 +373,7 @@ def _base30hex(integer):
         b30.append(base30[integer%30])
         integer = int(integer / 30)
     return "".join(reversed(b30))
-        
+
 
 def _test():
     import doctest
@@ -381,7 +381,7 @@ def _test():
     if tests.failed:
         return "☹"*tests.failed + " / " + str(tests.attempted)
     return "^_^ (" + _base30hex(tests.attempted) + ")"
-        
+
 
 if __name__ == "__main__":
     print _test()

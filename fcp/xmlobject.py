@@ -28,7 +28,7 @@ Example XML file::
 Example usage::
 
     >>> from xmlobject import XMLFile
-    
+
     >>> x = XMLFile(path="sample.xml)
 
     >>> print x
@@ -48,13 +48,13 @@ Example usage::
     John Smith
 
     >>> john = x.root.person[0]
-    
+
     >>> john.height = 184
 
     >>> c = john._addNode("crime")
 
     >>> c.name = "Grand Theft Auto"
-    
+
     >>> c.date = "4 May, 2005"
 
     >>> print x.toxml()
@@ -119,14 +119,14 @@ class XMLFile:
     def __init__(self, **kw):
         """
         Create an XMLFile
-        
+
         Keywords:
             - path - a pathname from which the file can be read
             - file - an open file object from which the raw xml
               can be read
             - raw - the raw xml itself
             - root - name of root tag, if not reading content
-    
+
         Usage scenarios:
             1. Working with existing content - you must supply input in
                one of the following ways:
@@ -135,7 +135,7 @@ class XMLFile:
                    - 'raw' must contain raw xml as a string
             2. Creating whole new content - you must give the name
                of the root tag in the 'root' keyword
-        
+
         Notes:
             - Keyword precedence governing existing content is:
                 1. path (if existing file)
@@ -154,7 +154,7 @@ class XMLFile:
         fobj = kw.get("file", None)
         raw = kw.get("raw", None)
         root = kw.get("root", None)
-        
+
         if path:
             self.path = path
             try:
@@ -163,10 +163,10 @@ class XMLFile:
                 pass
         else:
             self.path = None
-    
+
         if fobj:
             raw = fobj.read()
-    
+
         if raw:
             self.dom = xml.dom.minidom.parseString(raw)
         else:
@@ -175,24 +175,24 @@ class XMLFile:
                 # in which case, must give a root node name
                 raise MissingRootTag(
                         "No existing content, so must specify root")
-    
+
             # ok, create a blank dom
             self.dom = impl.createDocument(None, root, None)
-    
+
         # get the root node, save it as attributes 'root' and name of node
         rootnode = self.dom.documentElement
-    
+
         # now validate root tag
         if root:
             if rootnode.nodeName != root:
                 raise IncorrectRootTag("Gave root='%s', input has root='%s'" % (
                     root, rootnode.nodeName))
-    
+
         # need this for recursion in XMLNode
         self._childrenByName = {}
         self._children = []
-    
-        # add all the child nodes    
+
+        # add all the child nodes
         for child in self.dom.childNodes:
             childnode = XMLNode(self, child)
             #print "compare %s to %s" % (rootnode, child)
@@ -200,34 +200,34 @@ class XMLFile:
                 #print "found root"
                 self.root = childnode
         setattr(self, rootnode.nodeName, self.root)
-    
+
     #@-node:__init__
     #@+node:save
     def save(self, where=None, obj=None):
         """
         Saves the document.
-        
+
         If argument 'where' is given, saves to it, otherwise
         tries to save to the original given 'path' (or barfs)
-        
+
         Value can be a string (taken to be a file path), or an open
         file object.
         """
         obj = obj or self.dom
-    
+
         if not where:
             if self.path:
                 where = self.path
-    
+
         if isinstance(where, str):
             where = file(where, "w")
-    
+
         if not where:
             raise CannotSave("No save destination, and no original path")
-    
+
         where.write(obj.toxml())
         where.flush()
-    
+
     #@-node:save
     #@+node:saveAs
     def saveAs(self, path):
@@ -236,12 +236,12 @@ class XMLFile:
         """
         self.path = path
         self.save()
-    
+
     #@-node:saveAs
     #@+node:toxml
     def toxml(self):
         return self.dom.toxml()
-    
+
     #@-node:toxml
     #@+node:__len__
     def __len__(self):
@@ -249,7 +249,7 @@ class XMLFile:
         returns number of child nodes
         """
         return len(self._children)
-    
+
     #@-node:__len__
     #@+node:__getitem__
     def __getitem__(self, idx):
@@ -257,7 +257,7 @@ class XMLFile:
             return self._children[idx]
         else:
             return self._childrenByName[idx]
-    
+
     #@-node:__getitem__
     #@-others
 
@@ -285,10 +285,10 @@ class XMLNode:
         self._node = node
         self._childrenByName = {}
         self._children = []
-    
+
         # add ourself to parent's children registry
         parent._children.append(self)
-    
+
         # the deal with named subtags is that we store the first instance
         # as itself, and with second and subsequent instances, we make a list
         parentDict = self._parent._childrenByName
@@ -301,7 +301,7 @@ class XMLNode:
                 # the instance to a list
                 parentDict[nodeName] = parent.__dict__[nodeName] = [parentDict[nodeName]]
             parentDict[nodeName].append(self)
-    
+
         # figure out our type
         self._value = None
         if isinstance(node, xml.dom.minidom.Text):
@@ -315,11 +315,11 @@ class XMLNode:
             self._value = node.nodeValue
         else:
             raise InvalidNode("node class %s" % node.__class__)
-    
+
         # and wrap all the child nodes
         for child in node.childNodes:
             XMLNode(self, child)
-    
+
     #@-node:__init__
     #@+node:_render
     def _render(self):
@@ -328,7 +328,7 @@ class XMLNode:
         indented as required
         """
         return self._node.toxml()
-    
+
     #@-node:_render
     #@+node:__repr__
     def __repr__(self):
@@ -336,67 +336,67 @@ class XMLNode:
             return "<XMLNode: %s>" % self._node.nodeName
         else:
             return "<XMLNode: %s>" % self._type
-    
+
     #@-node:__repr__
     #@+node:__getattr__
     def __getattr__(self, attr):
         """
         Fetches an attribute or child node of this tag
-        
+
         If it's an attribute, then returns the attribute value as a string.
-        
+
         If a child node, then:
             - if there is only one child node of that name, return it
             - if there is more than one child node of that name, return a list
               of child nodes of that tag name
-    
+
         Supports some magic attributes:
             - _text - the value of the first child node of type text
         """
         #print "%s: __getattr__: attr=%s" % (self, attr)
-    
+
         # magic attribute to return text
         if attr == '_text':
             tnode = self['#text']
             if isinstance(tnode, list):
                 tnode = tnode[0]
             return tnode._value
-    
+
         if self._type in ['text', 'comment']:
             if attr == '_value':
                 return self._node.nodeValue
             else:
                 raise AttributeError(attr)
-    
+
         if self._node.hasAttribute(attr):
             return self._node.getAttribute(attr)
         elif self._childrenByName.has_key(attr):
             return self._childrenByName[attr]
-        
+
         #elif attr == 'value':
             # magic attribute
-            
+
         else:
             raise AttributeError(attr)
-    
-    
+
+
     #@-node:__getattr__
     #@+node:__setattr__
     def __setattr__(self, attr, val):
         """
         Change the value of an attribute of this tag
-    
+
         The magic attribute '_text' can be used to set the first child
         text node's value
-        
+
         For example::
-            
+
             Consider:
-            
+
               <somenode>
                 <child>foo</child>
               </somenode>
-    
+
             >>> somenode
             <XMLNODE: somenode>
             >>> somenode.child
@@ -410,10 +410,10 @@ class XMLNode:
             'bar'
             >>> somenode.child._toxml()
             u'<somenode><child>bar/child></somenode>'
-            
+
         """
         if attr.startswith("_"):
-    
+
             # magic attribute for setting _text
             if attr == '_text':
                 tnode = self['#text']
@@ -422,7 +422,7 @@ class XMLNode:
                 tnode._node.nodeValue = val
                 tnode._value = val
                 return
-                
+
             self.__dict__[attr] = val
         elif self._type in ['text', 'comment']:
             self._node.nodeValue = val
@@ -431,7 +431,7 @@ class XMLNode:
             if self._childrenByName.has_key(attr):
                 raise Exception("Attribute Exists")
             self._node.setAttribute(attr, str(val))
-    
+
     #@-node:__setattr__
     #@+node:_keys
     def _keys(self):
@@ -439,25 +439,25 @@ class XMLNode:
         Return a list of attribute names
         """
         return self._node.attributes.keys()
-    
+
     def _values(self):
         """
         Returns a list of (attrname, attrval) tuples for this tag
         """
         return [self._node.getAttribute(k) for k in self._node.attributes.keys()]
-    
+
     def _items(self):
         """
         returns a list of attribute values for this tag
         """
         return [(k, self._node.getAttribute(k)) for k in self._node.attributes.keys()]
-    
+
     def _has_key(self, k):
         """
         returns True if this tag has an attribute of the given name
         """
         return self._node.hasAttribute(k) or self._childrenByName.has_key(k)
-    
+
     def _get(self, k, default=None):
         """
         returns the value of attribute k, or default if no such attribute
@@ -473,7 +473,7 @@ class XMLNode:
         returns number of child nodes
         """
         return len(self._children)
-    
+
     #@-node:__len__
     #@+node:__getitem__
     def __getitem__(self, idx):
@@ -483,20 +483,20 @@ class XMLNode:
         the key as the tag name
         """
         #print "__getitem__: idx=%s" % str(idx)
-    
+
         if isinstance(idx, slice) or isinstance(idx, int):
             return self._children[idx]
         elif isinstance(idx, str):
             return self._childrenByName[idx]
         else:
             raise IndexError(idx)
-    
+
     #@-node:__getitem__
     #@+node:_addNode
     def _addNode(self, child):
         """
         Tries to append a child node to the tree, and returns it
-        
+
         Value of 'child' must be one of:
             - a string (in which case it is taken to be the name
               of the new node's tag)
@@ -504,15 +504,15 @@ class XMLNode:
             - an XMLNode object, in which case it will be added without
               wrapping
         """
-    
+
         if isinstance(child, XMLNode):
-    
+
             # add it to our children registry
             self._children.append(child)
-    
+
             parentDict = self._childrenByName
             nodeName = child._node.nodeName
-    
+
             if not parentDict.has_key(nodeName):
                 parentDict[nodeName] = self.__dict__[nodeName] = child
             else:
@@ -522,26 +522,26 @@ class XMLNode:
                     parentDict[nodeName] \
                         = self.__dict__[nodeName] \
                             = [parentDict[nodeName]]
-    
+
                 parentDict[nodeName].append(child)
-    
+
             # and stick it in the dom
             self._node.appendChild(child._node)
-            
+
             return child
-    
+
         elif isinstance(child, str):
             childNode = self._root.dom.createElement(child)
             self._node.appendChild(childNode)
-    
+
         elif isinstance(child, xml.dom.minidom.Element):
             childNode = child
             child = childNode.nodeName
             self._node.appendChild(childNode)
-    
-            
+
+
         return XMLNode(self, childNode)
-    
+
     #@-node:_addNode
     #@+node:_getChild
     def _getChild(self, name):
@@ -553,12 +553,12 @@ class XMLNode:
             item = getattr(self, name)
         except AttributeError:
             return []
-        
+
         if not isinstance(item, list):
             item = [item]
-        
+
         return item
-    
+
     #@-node:_getChild
     #@+node:_delChild
     def _delChild(self, child):
@@ -572,19 +572,19 @@ class XMLNode:
                 print "removing"
                 node._children.remove(child)
                 node._node.removeChild(child._node)
-        
+
             for k,v in node._childrenByName.items():
                 if child == v:
                     del node._childrenByName[k]
                 elif isinstance(v, list):
                     if child in v:
                         v.remove(child)
-            
+
             if isinstance(node, XMLFile):
                 break
-            
+
             node = node._parent
-    
+
     #@-node:_delChild
     #@+node:_addText
     def _addText(self, value):
@@ -595,7 +595,7 @@ class XMLNode:
         childNode = self._root.dom.createTextNode(value)
         self._node.appendChild(childNode)
         return XMLNode(self, childNode)
-    
+
     #@-node:_addText
     #@+node:_addComment
     def _addComment(self, comment):
@@ -606,23 +606,23 @@ class XMLNode:
         childNode = self._root.dom.createCommentNode(comment)
         self._node.appendChild(childNode)
         return XMLNode(self, childNode)
-    
+
     #@-node:_addComment
     #@+node:_save
     def _save(self, where=None):
         """
         Generates well-formed XML from just this node, and saves it
         to a file.
-        
+
         Argument 'where' is either an open file object, or a pathname
-    
+
         If 'where' is not given, then saves the entire document tree.
         """
         if not where:
             self._root.save()
         else:
             self._root.save(where, self._node)
-    
+
     #@-node:_save
     #@+node:_toxml
     def _toxml(self):
@@ -630,7 +630,7 @@ class XMLNode:
         renders just this node out to raw xml code
         """
         return self._node.toxml()
-    
+
     #@-node:_toxml
     #@-others
 #@-node:class XMLNode

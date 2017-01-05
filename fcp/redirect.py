@@ -114,7 +114,7 @@ def main():
 
         if o in ("-H", "--fcpHost"):
             fcpHost = a
-        
+
         if o in ("-P", "--fcpPort"):
             try:
                 fcpPort = int(a)
@@ -135,7 +135,7 @@ def main():
         usage("Invalid number of arguments")
     uriSrc = args[0].strip()
     uriDest = args[1].strip()
-    
+
     # do the invert
     uriPub = n.redirect(uriSrc, uriDest)
 

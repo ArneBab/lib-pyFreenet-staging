@@ -35,7 +35,7 @@ class Parser:
         self.unparsed = []
         self.endunparsed = None
         self.unparsedvariable = None
-    
+
     def parse(self, text):
         for line in text.splitlines():
             self.readline(line)
@@ -43,7 +43,7 @@ class Parser:
         if self.unparsedstring.strip() or self.endunparsed:
             raise ValueError("Invalid or too complex code: " + self.endunparsed + "\n" + self.unparsed)
         return self.data
-    
+
     def jsonload(self, text):
         # replace entities which json encodes differently from python.
         text = text.replace(
@@ -65,7 +65,7 @@ class Parser:
             # needs some manual conversion.
             # json uses " for strings but never '. Python may use '
             # for backwards compatibility we have to treat this correctly.
-            # If there are two " in a line, then every ' must be escaped 
+            # If there are two " in a line, then every ' must be escaped
             # as \' instead of being replaced by ". This requires some care.
             lines = text.splitlines()
             for n, l in enumerate(lines[:]):
@@ -81,39 +81,39 @@ class Parser:
             except ValueError:
                 print text
                 raise
-    
+
     # FIXME: Using a property here might be confusing, because I assign
     #        directly to unparsed. Check whether there’s a cleaner way.
     @property
     def unparsedstring(self):
         """Join and return self.unparsed as a string."""
         return "\n".join(self.unparsed)
-    
+
     def checkandprocessunprocessed(self):
         """Check if the rest of self.unprocessed finishes the line."""
         if self.endunparsed in self.unparsedstring:
             self.data[self.unparsedvariable] = self.jsonload(self.unparsedstring)
             self.unparsed, self.unparsedvariable, self.endunparsed = [], "", ""
-    
+
     def readline(self, line):
         """Read one line of text."""
         # if we have unparsed code and this line does not end it, we just add the code to the unparsed code.
         if self.unparsed and not self.endunparsed:
             raise ValueError("We have unparsed data but we do not know how it ends. THIS IS A BUG.")
-        
+
         if self.unparsed and self.endunparsed:
             self.unparsed.append(line)
-        
+
         if self.unparsed and self.endunparsed and not line.strip().endswith(self.endunparsed):
             return # line is already processed as far as possible
         if self.unparsed and self.endunparsed and line.strip().endswith(self.endunparsed):
-            # json uses null for None, true for True and false for False. 
+            # json uses null for None, true for True and false for False.
             # We have to replace those in the content and hope that nothing will break.
             data = self.jsonload(self.unparsedstring)
             self.data[self.unparsedvariable] = data
             self.unparsed, self.endunparsed = [], ""
             return
-        
+
         # start reading complex datastructures
         if " = [" in line:
             start = line.index(" = [")
@@ -129,7 +129,7 @@ class Parser:
             self.endunparsed = "}"
             self.checkandprocessunprocessed()
             return
-        
+
         # handle the easy cases
         # ignore empty lines
         if not line.strip():
@@ -140,7 +140,7 @@ class Parser:
         # the only thing left to care for are variable assignments
         if not " = " in line:
             return
-        
+
         # prepare reading variables
         start = line.index(" = ")
         variable = line[:start]
@@ -148,31 +148,31 @@ class Parser:
         if True in [i in variable for i in forbiddenvariablechars]:
             raise ValueError("Variables must not contain any of the forbidden characters: " + str(forbiddenvariablechars))
         rest = line[start+3:].strip()
-        
+
         # handle literal values: these are safe to eval
-        safevalues = "True", "False", "None" 
+        safevalues = "True", "False", "None"
         if rest in safevalues:
             self.data[variable] = eval(rest)
             return
 
         # handle json literals
-        safevalues = "true", "false", "null" 
+        safevalues = "true", "false", "null"
         if rest in safevalues:
             self.data[variable] = json.loads(rest)
             return
-        
+
         # handle numbers: these are safe to eval, too
         numberchars = set(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."])
         if not False in [i in numberchars for i in rest]:
             self.data[variable] = eval(rest)
             return
-        
+
         # finally handle strings
         if rest.startswith("'") and rest.endswith("'") or rest.startswith('"') and rest.endswith('"'):
             self.data[variable] = rest[1:-1]
             return
-        
-        
+
+
         # if we did not return by now, the file is malformed (or too complex)
         raise ValueError("Invalid or too complex code: " + line)
 
