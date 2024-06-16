@@ -510,7 +510,6 @@ class SiteState:
     
         # get existing record, or create new one
         self.load()
-        self.save()
     
         # barf if directory is invalid
         if not (os.path.isdir(self.dir)):
@@ -709,11 +708,25 @@ class SiteState:
             f.close()
     
             try:
-                if os.path.exists(self.path):
-                    os.unlink(self.path)
                 #print "tmpFile=%s path=%s" % (tmpFile, self.path)
-                self.log(DETAIL, "save: %s -> %s" % (tmpFile, self.path))
-                os.rename(tmpFile, self.path)
+                self.log(DETAIL, "validate: %s" % (tmpFile, ))
+                try:
+                    if os.path.exists(self.path):
+                        with open(self.path, encoding='utf-8') as f:
+                            fcp.pseudopythonparser.Parser().parse(f.read())
+                except (ValueError, SyntaxError) as err:
+                    traceback.print_exc()
+                    print("Error validating temporary state file '%s' for site '%s' (%s): %s" % (
+                        tmpFile, self.name, self.path, err))
+                except Exception as err:
+                    traceback.print_exc()
+                    print("Unspecified error validating temporary state file '%s' for site '%s' (%s): %s" % (
+                        tmpFile, self.name, self.path, err))
+                else: # no error: validated successfully
+                    self.log(DETAIL, "save: %s -> %s" % (tmpFile, self.path))
+                    if os.path.exists(self.path):
+                        os.unlink(self.path)
+                    os.rename(tmpFile, self.path)
             except KeyboardInterrupt:
                 try:
                     f.close()
@@ -764,7 +777,10 @@ class SiteState:
         """
         log = self.log
 
-        chkSaveInterval = 10;
+        chkSaveInterval = 10
+        # FIXME when the limit is reached, we are stuck in updating state.
+        maxSimultaneousChkInsertSizeBytes = 10 * 1024 * 1024 * 1024 # 10 GiB
+        maxSimultaneousChkInserts = 100
     
         self.log(INFO, "Processing freesite '%s'..." % self.name)
         if self.updateInProgress:
@@ -839,6 +855,7 @@ class SiteState:
         # compute CHKs for all these files, synchronously, and at the same time,
         # submit the inserts, asynchronously
         chkCounter = 0
+        sizeCounter = 0
         for rec in filesToInsert:
             if rec['state'] == 'waiting':
                 continue
@@ -890,8 +907,24 @@ class SiteState:
             rec['chkname'] = ChkTargetFilename(name)
     
             chkCounter += 1
+            sizeCounter += rec['sizebytes']
             if( 0 == ( chkCounter % chkSaveInterval )):
                 self.save()
+            if( 0 == ( chkCounter % maxSimultaneousChkInserts )):
+                self.updateInProgress = True
+                self.save()
+                log(ERROR, 
+                    "insert:%s: Max number of simultaneous CHK uploads reached: %s. Re-run insert to add more." \
+                    % (self.name, maxSimultaneousChkInserts))
+                return
+            if sizeCounter > maxSimultaneousChkInsertSizeBytes:
+                self.updateInProgress = True
+                self.save()
+                log(ERROR, 
+                    "insert:%s: Max size of simultaneous CHK uploads reached: %s GiB. Re-run insert to add more." \
+                    % (self.name, (maxSimultaneousChkInsertSizeBytes / 1024. / 1024 / 1024)))
+                return
+
             
         self.save()
     
@@ -1023,8 +1056,7 @@ class SiteState:
                 continue
         
             name = parts[2]
-            # bab: huh? duplicated info?
-            queuedJobs[name] = name
+            queuedJobs[name] = job
         
             if not job.isComplete():
                 continue
@@ -1084,8 +1116,10 @@ class SiteState:
                 self.log(CRITICAL, "insert: node has forgotten job %s" % rec['name'])
                 rec['state'] = 'waiting'
                 self.needToUpdate = True
-        
-        # check for any uninserted files or manifests
+
+        # FIXME: if we run into the maxSimultaneousChkInsertSizeBytes
+        # or maxSimultaneousChkInserts limit, we’re stuck in the
+        # updating state. check for any uninserted files or manifests
         stillInserting = False
         for rec in self.files:
             if rec['state'] != 'idle':
@@ -1367,17 +1401,25 @@ class SiteState:
                         uri = rec['uri']
                     except KeyError:
                         if 'path' in rec:
-                            raw = open(rec['path'],"rb").read()
+                            with open(rec['path'],"rb") as f:
+                                raw = f.read()
                             uri = self.chkCalcNode.genchk(
-                                data=raw, 
+                                data=raw,
                                 mimetype=rec['mimetype'],
                                 TargetFilename=ChkTargetFilename(rec['name']))
-                            rec['uri'] = uri
+                            if isinstance(uri, str):
+                                rec['uri'] = uri
+                            else:
+                                self.log(ERROR,
+                                         "sitemap:%s: uri is no string %s; rec: %s" % (
+                                             self.name, uri, rec))
                     lines.append(uri)
             lines.append("</pre></body></html>\n")
             
             self.sitemapRec = {'name': self.sitemap, 'state': 'changed', 'mimetype': 'text/html'}
-            self.generatedTextData[self.sitemapRec['name']] = "\n".join(lines)
+            # ensure that only strings are processed for the sitemap to avoid breakage.
+            self.generatedTextData[self.sitemapRec['name']] = "\n".join(line for line in lines
+                                                                        if isinstance(line, str))
             raw = self.generatedTextData[self.sitemapRec['name']].encode("utf-8")
             self.sitemapRec['sizebytes'] = len(raw)
             self.sitemapRec['uri'] = self.chkCalcNode.genchk(

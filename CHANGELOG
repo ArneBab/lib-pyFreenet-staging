@@ -1,6 +1,10 @@
 
 Revision history for pyFreenet
 
+- Version 0.6.2
+    - Only save valid files (keep old file if validation fails).
+    - Insert at most 100 new external CHKs and at most 10 GiB external per run to avoid overloading the node. If there are more, bail out when reaching the maximum. The site itself only updates in runs which upload all new external CHKs.
+
 - Version 0.6.1
     - Add option to specify the mime type for files matching a pattern. Thanks to Debora Wöpcke!
 
